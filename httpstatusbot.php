@@ -8,7 +8,6 @@
 error_reporting(E_ALL & ~E_DEPRECATED);
 
 require_once 'Net/SmartIRC.php';
-require_once 'HTTP/Request2.php';
 
 define('MYIRC_CHANNEL',  "#hoge");
 define('MYIRC_USERNAME', "httpstatusbot");
@@ -77,21 +76,30 @@ class mybot {
         511 => 'Network Authentication Required'
     );
 
-    function __construct() {
+    function __construct()
+    {
 
       $this->ch = MYIRC_CHANNEL;
         
-   }
+    }
 
-
-    function httpstatus($irc, $data) {
+    function httpstatus($irc, $data)
+    {
         $status = $data->message;
-        var_dump($data);
         if (isset($this->code[$status])) {
             $irc->message(SMARTIRC_TYPE_NOTICE, $data->channel, $status . ' ' . $this->code[$status]);
+        } else {
+            foreach ($this->code as $k => $v) {
+                if (preg_match('/^' . $status . '/', $k)) {
+                    $message = "{$k} {$v}\n";
+                    $irc->message(SMARTIRC_TYPE_NOTICE, $data->channel, $message);
+                }               
+            }
         }
     }
-    function onjoin($irc, $data) {        
+
+    function onjoin($irc, $data)
+    {
         if ($data->nick == $irc->_nick) {
             //$irc->message(SMARTIRC_TYPE_NOTICE, $this->ch, $this->text_onjoin);
         }
